@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommendation System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Montserrat:wght@400;600;700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000000; /* Black background */
+            min-height: 100vh;
+            color: #e0e0e0; /* Light gray text for contrast */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #ffffff;
+        }
+
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(138, 43, 226, 0.741); /* Purple glow */
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .search-section {
+            background: #1a1a1a; /* Dark gray for search section */
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(138, 43, 226, 0.15); /* Subtle purple shadow */
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #333333;
+            border-radius: 50px;
+            font-size: 17px;
+            outline: none;
+            background-color: #0d0d0d; /* Even darker input background */
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: #888888;
+        }
+
+        .search-input:focus {
+            border-color: #8A2BE2; /* Purple accent */
+            box-shadow: 0 0 0 4px rgba(138, 43, 226, 0.3);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #8A2BE2 0%, #4169E1 100%); /* Purple-blue gradient */
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(138, 43, 226, 0.3);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .search-suggestions {
+            position: relative;
+            flex: 1;
+        }
+
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.1);
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 12px 18px;
+            cursor: pointer;
+            border-bottom: 1px solid #282828;
+            transition: background 0.2s ease;
+            color: #e0e0e0;
+        }
+
+        .suggestion-item:hover {
+            background: #8A2BE2; /* Purple highlight on hover */
+            color: #ffffff;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .results-section {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(138, 43, 226, 0.15);
+            display: none;
+        }
+
+        .results-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .results-header h2 {
+            color: #8A2BE2; /* Purple for results title */
+            margin-bottom: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.2rem;
+        }
+
+        .results-header p {
+            color: #b0b0b0;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .movie-card {
+            background: #282828; /* Darker card background */
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            border: 1px solid #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-7px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(138, 43, 226, 0.25);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #8A2BE2 0%, #4169E1 100%); /* Purple-blue gradient */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-poster.placeholder {
+            background: linear-gradient(135deg, #8A2BE2 0%, #4169E1 100%);
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .movie-poster.placeholder i {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .movie-poster.placeholder .movie-title-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            line-height: 1.4;
+            max-width: 100%;
+            word-wrap: break-word;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .movie-info {
+            padding: 20px;
+        }
+
+        .movie-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #8A2BE2; /* Purple for movie titles */
+            line-height: 1.4;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .movie-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: #999999;
+        }
+
+        .movie-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #ffcc00; /* Gold for stars */
+        }
+
+        .rating-star {
+            color: #ffcc00;
+        }
+
+        .movie-overview {
+            color: #b0b0b0;
+            line-height: 1.6;
+            font-size: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 4; /* Increased line clamp for more overview text */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8A2BE2; /* Purple for loading text */
+        }
+
+        .loading i {
+            font-size: 2.5rem;
+            animation: spin 1s linear infinite;
+            color: #8A2BE2; /* Purple for loading icon */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #ff6b6b; /* Reddish error */
+        }
+
+        .error i {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #b0b0b0;
+        }
+
+        .no-results i {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #999;
+        }
+        
+        .search-section p {
+            color: #b0b0b0 !important; /* Ensure the tip text is light gray */
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .movies-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-film"></i> Movie Recommender</h1>
+            <p>Discover your next favorite movie with AI-powered recommendations</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <div class="search-suggestions">
+                    <input type="text" 
+                           class="search-input" 
+                           id="searchInput" 
+                           placeholder="Enter a movie name, genre, or keyword..."
+                           autocomplete="off">
+                    <div class="suggestions-list" id="suggestionsList"></div>
+                </div>
+                <button class="search-btn" id="searchBtn" onclick="searchMovies()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <p style="color: #666; text-align: center; margin: 0;">
+                <i class="fas fa-lightbulb"></i> 
+                Try searching for movies like "The Dark Knight", "action", "comedy", or "Christopher Nolan"
+            </p>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 id="resultsTitle">Movie Recommendations</h2>
+                <p id="resultsSubtitle">Based on your search</p>
+            </div>
+            <div id="moviesGrid" class="movies-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const resultsSection = document.getElementById('resultsSection');
+        const moviesGrid = document.getElementById('moviesGrid');
+        const resultsTitle = document.getElementById('resultsTitle');
+        const resultsSubtitle = document.getElementById('resultsSubtitle');
+        const searchBtn = document.getElementById('searchBtn');
+
+        // Search suggestions
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                suggestionsList.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300);
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-suggestions')) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+
+        async function fetchSuggestions(query) {
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.movies && data.movies.length > 0) {
+                    displaySuggestions(data.movies);
+                } else {
+                    suggestionsList.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching suggestions:', error);
+            }
+        }
+
+        function displaySuggestions(movies) {
+            suggestionsList.innerHTML = '';
+            
+            movies.forEach(movie => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = movie.title;
+                item.onclick = () => {
+                    searchInput.value = movie.title;
+                    suggestionsList.style.display = 'none';
+                    searchMovies();
+                };
+                suggestionsList.appendChild(item);
+            });
+            
+            suggestionsList.style.display = 'block';
+        }
+
+        async function searchMovies() {
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                alert('Please enter a search term');
+                return;
+            }
+
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+            
+            try {
+                const response = await fetch('/api/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'An error occurred');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to connect to the server');
+            } finally {
+                // Reset button state
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = '<i class="fas fa-search"></i> Search';
+            }
+        }
+
+        function displayResults(data) {
+            resultsTitle.textContent = data.search_type === 'keyword_search' ? 
+                'Search Results' : 'Movie Recommendations';
+            resultsSubtitle.textContent = data.search_type === 'keyword_search' ?
+                `Found ${data.recommendations.length} movies matching "${data.query}"` :
+                `Movies similar to "${data.query}"`;
+            
+            if (data.recommendations && data.recommendations.length > 0) {
+                displayMovies(data.recommendations);
+                resultsSection.style.display = 'block';
+            } else {
+                showNoResults();
+            }
+        }
+
+        function displayMovies(movies) {
+            moviesGrid.innerHTML = '';
+            
+            movies.forEach(movie => {
+                const movieCard = createMovieCard(movie);
+                moviesGrid.appendChild(movieCard);
+            });
+        }
+
+        function createMovieCard(movie) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            
+            // Create poster section
+            const poster = createPoster(movie);
+            
+            const genres = movie.genres && movie.genres !== '[]' ? 
+                JSON.parse(movie.genres).join(', ') : 'Unknown';
+            
+            const releaseYear = movie.release_date && movie.release_date !== 'Unknown' ? 
+                new Date(movie.release_date).getFullYear() : 'Unknown';
+            
+            card.innerHTML = `
+                ${poster}
+                <div class="movie-info">
+                    <h3 class="movie-title">${movie.title}</h3>
+                    <div class="movie-meta">
+                        <span>${releaseYear} • ${genres}</span>
+                        <div class="movie-rating">
+                            <i class="fas fa-star rating-star"></i>
+                            <span>${movie.vote_average.toFixed(1)}</span>
+                        </div>
+                    </div>
+                    <p class="movie-overview">${movie.overview}</p>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function createPoster(movie) {
+            if (movie.poster_url && movie.poster_url !== "placeholder" && !movie.poster_url.includes('placeholder.com')) {
+                // Use actual poster
+                return `<img src="${movie.poster_url}" alt="${movie.title}" class="movie-poster">`;
+            } else {
+                // Use attractive placeholder with movie icon and title
+                return `
+                    <div class="movie-poster placeholder">
+                        <i class="fas fa-film"></i>
+                        <div class="movie-title-text">${movie.title}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function showError(message) {
+            moviesGrid.innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+            resultsSection.style.display = 'block';
+        }
+
+        function showNoResults() {
+            moviesGrid.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h3>No Results Found</h3>
+                    <p>Try searching for a different movie, genre, or keyword.</p>
+                </div>
+            `;
+            resultsSection.style.display = 'block';
+        }
+
+        // Enter key to search
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchMovies();
+            }
+        });
+    </script>
+</body>
+</html>
